@@ -11,3 +11,7 @@ dist
 .DS_Store
 
 volume
+
+# original
+logs
+**/*.0x
