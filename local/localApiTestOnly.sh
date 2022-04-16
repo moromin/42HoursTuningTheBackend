@@ -7,3 +7,4 @@
 # ===========================
 
 (cd ../scoring/tool && node ./nodeTool/check.js "fallback") || echo "処理に失敗しました。"
+docker compose logs backend > docker-backend.log

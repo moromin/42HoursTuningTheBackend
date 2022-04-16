@@ -82,12 +82,16 @@ const testAuth = async(method, path) => {
     }
 }
 
+// logging time here?
 const httpClient = async (key, method, path, body, forAuthCheck = false) => {
     const url = `${target}${path}`;
 
     if (!forAuthCheck) {
         await testAuth(method, path);
     }
+
+    var start = new Date()
+    var hrstart = process.hrtime()
 
     const options = {
         url: url,
@@ -107,6 +111,15 @@ const httpClient = async (key, method, path, body, forAuthCheck = false) => {
             throw Error(`${method} ${path} Unexpect status ${r.status}`);
         }
     }
+
+    var end = new Date() - start
+    var hrend = process.hrtime(hrstart)
+
+    // console.info('Execution time: %dms', end)
+    if (!forAuthCheck) {
+        console.info('Execution time (hr): %ds %dms', hrend[0], hrend[1] / 1000000)
+    }
+
     return r;
 };
 
@@ -300,7 +313,7 @@ const testRecordReadWrite = async () => {
     }
     mylog(expected);
 
-    await checkObjectField(`${method} ${path}`, actualRecord, 
+    await checkObjectField(`${method} ${path}`, actualRecord,
         expected, '文書の登録内容と閲覧内容が一致しません。');
 
     const expectFiles = [{ name: img1.name }, {name: img2.name }];
@@ -311,7 +324,7 @@ const testRecordReadWrite = async () => {
         throw Error(`登録した文書を閲覧時の添付ファイル数が一致しません。`);
     }
 
-    if (actualRecord.files[0].name !== expectFiles[0].name 
+    if (actualRecord.files[0].name !== expectFiles[0].name
         ||actualRecord.files[1].name !== expectFiles[1].name ) {
         throw Error(`登録文書閲覧時の添付ファイルの順序、またはファイル名が不正です。`);
     }

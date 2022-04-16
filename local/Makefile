@@ -3,15 +3,15 @@ NGINX_CTR_NAME	:=	local_nginx_1
 # ========== DOCKER DOMPOSE ==========
 up:
 #	bash cpMysqlFile.sh
-	docker-compose -f docker-compose-local.yaml up
+  docker-compose up
 
 down:
-	docker-compose -f docker-compose-local.yaml down --rmi all --volumes --remove-orphans
+	docker-compose down --rmi all --volumes --remove-orphans
 
 kill-all:
 	$(MAKE) down || :
 	docker stop $(docker ps -q) || docker rm -f $(docker ps -a -q) || docker rmi $(docker images -q)
-	
+
 # ========== NGINX ==========
 nginx-it:
 	docker exec -it $(NGINX_CTR_NAME) bash
