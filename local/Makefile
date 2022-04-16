@@ -3,7 +3,7 @@ NGINX_CTR_NAME	:=	local_nginx_1
 # ========== DOCKER DOMPOSE ==========
 up:
 #	bash cpMysqlFile.sh
-	docker-compose up
+  docker-compose up
 
 down:
 	docker-compose down --rmi all --volumes --remove-orphans
