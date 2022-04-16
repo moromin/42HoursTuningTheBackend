@@ -772,48 +772,41 @@ const getComments = async (req, res) => {
 
   const recordId = req.params.recordId;
 
-  const commentQs = `select * from record_comment where linked_record_id = ? order by created_at desc`;
+  const commentQs = `
+    with comments as (
+      select *
+      from record_comment
+      where linked_record_id = ?
+    ), primary_group_name as (
+      select gm.user_id, gi.name
+      from group_member as gm
+      join group_info as gi
+      on gm.group_id = gi.group_id
+      where is_primary = true
+    )
+
+    select c.comment_id, c.value, c.created_by, u.name, pgm.name as pgm_name, c.created_at
+    from comments as c
+    join user as u
+    on c.created_by = u.user_id
+    inner join primary_group_name as pgm
+    on c.created_by = pgm.user_id
+    ORDER BY c.created_at desc;`;
 
   const [commentResult] = await pool.query(commentQs, [`${recordId}`]);
   mylog(commentResult);
 
-  const commentList = Array(commentResult.length);
+  const commentList = Array();
 
-  const searchPrimaryGroupQs = `select * from group_member where user_id = ? and is_primary = true`;
-  const searchUserQs = `select * from user where user_id = ?`;
-  const searchGroupQs = `select * from group_info where group_id = ?`;
-  for (let i = 0; i < commentResult.length; i++) {
-    let commentInfo = {
-      commentId: '',
-      value: '',
-      createdBy: null,
-      createdByName: null,
-      createdByPrimaryGroupName: null,
-      createdAt: null,
-    };
-    const line = commentResult[i];
-
-    const [primaryResult] = await pool.query(searchPrimaryGroupQs, [line.created_by]);
-    if (primaryResult.length === 1) {
-      const primaryGroupId = primaryResult[0].group_id;
-
-      const [groupResult] = await pool.query(searchGroupQs, [primaryGroupId]);
-      if (groupResult.length === 1) {
-        commentInfo.createdByPrimaryGroupName = groupResult[0].name;
-      }
-    }
-
-    const [userResult] = await pool.query(searchUserQs, [line.created_by]);
-    if (userResult.length === 1) {
-      commentInfo.createdByName = userResult[0].name;
-    }
-
-    commentInfo.commentId = line.comment_id;
-    commentInfo.value = line.value;
-    commentInfo.createdBy = line.created_by;
-    commentInfo.createdAt = line.created_at;
-
-    commentList[i] = commentInfo;
+  for (const e of commentResult) {
+    commentList.push({
+      commentId: e.comment_id,
+      value: e.value,
+      createdBy: e.created_by,
+      createdByName: e.name,
+      createdByPrimaryGroupName: e.pgm_name,
+      createdAt: e.created_at,
+    });
   }
 
   for (const row of commentList) {
@@ -822,6 +815,7 @@ const getComments = async (req, res) => {
 
   res.send({ items: commentList });
 };
+
 
 // POST records/{recordId}/comments
 // コメントの投稿
