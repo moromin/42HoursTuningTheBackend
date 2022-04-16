@@ -21,6 +21,10 @@ nginx-log:
 	docker cp $(NGINX_CTR_NAME):/var/log/nginx/alp.log ./nginx_alp.log
 	cat nginx_alp.log | alp ltsv
 
+# ========== MYSQL ==========
+mysql-it:
+	docker exec -it $(MYSQL_CTR_NAME) bash
+
 mysql-log:
 	docker cp $(MYSQL_CTR_NAME):/var/log/mysql/slow.log ./slow.log
 	cat slow.log | docker run -i --rm matsuu/pt-query-digest > analyzed-slow.log
@@ -30,6 +34,10 @@ mysql-log:
 test:
 #	(cd ../scoring/tool/nodeTool && npm ci)
 	bash localApiTestOnly.sh
+
+test-prof:
+#	(cd ../scoring/tool/nodeTool && npm ci)
+	bash localApiTestProf.sh
 
 
 # ========== MEMO ==========
