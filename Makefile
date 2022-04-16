@@ -1,5 +1,5 @@
 evaluate:
-	(cd ./develop && build.sh)
+	(cd ./development && build.sh)
 	(cd ./scoring && evaluate.sh)
 
 log:
