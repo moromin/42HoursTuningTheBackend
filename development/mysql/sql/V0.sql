@@ -76,7 +76,6 @@ CREATE TABLE `session` (
     `linked_user_id` bigint NOT NULL,
     `created_at` TIMESTAMP NOT NULL,
     PRIMARY KEY (`session_id`),
-    INDEX `value_idx` (`value`)
 );
 
 CREATE TABLE `file` (
@@ -85,3 +84,4 @@ CREATE TABLE `file` (
     `name` VARCHAR(256) NOT NULL,
     PRIMARY KEY (`file_id`)
 );
+
