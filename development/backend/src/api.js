@@ -125,7 +125,42 @@ const getRecord = async (req, res) => {
 
   const recordId = req.params.recordId;
 
-  const recordQs = `select * from record where record_id = ?`;
+  const recordQs = `
+    with one_record as (
+      select *
+      from record
+      where record_id = ?
+    ), primary_group_name as (
+      select gm.user_id, gi.name
+      from group_member as gm
+      join group_info as gi
+      on gm.group_id = gi.group_id
+      where is_primary = true
+    )
+
+    select
+      o.record_id,
+      o.status,
+      o.title,
+      o.detail,
+      o.category_id,
+      c.name as category_name,
+      o.application_group,
+      g.name as group_name,
+      o.created_by,
+      u.name as user_name,
+      pgm.name as pri_group_name,
+      o.created_at,
+      o.updated_at
+    from one_record as o
+    join category as c
+    on o.category_id = c.category_id
+    inner join group_info as g
+    on o.application_group = g.group_id
+    inner join user as u
+    on o.created_by = u.user_id
+    inner join primary_group_name as pgm
+    on o.created_by = pgm.user_id;`;
 
   const [recordResult] = await pool.query(recordQs, [`${recordId}`]);
   mylog(recordResult);
@@ -148,66 +183,44 @@ const getRecord = async (req, res) => {
     createdByName: null,
     createdByPrimaryGroupName: null,
     createdAt: null,
+    updatedAt: null,
     files: [],
   };
 
-  const searchPrimaryGroupQs = `select * from group_member where user_id = ? and is_primary = true`;
-  const searchUserQs = `select * from user where user_id = ?`;
-  const searchGroupQs = `select * from group_info where group_id = ?`;
-  const searchCategoryQs = `select * from category where category_id = ?`;
-
   const line = recordResult[0];
-
-  const [primaryResult] = await pool.query(searchPrimaryGroupQs, [line.created_by]);
-  if (primaryResult.length === 1) {
-    const primaryGroupId = primaryResult[0].group_id;
-
-    const [groupResult] = await pool.query(searchGroupQs, [primaryGroupId]);
-    if (groupResult.length === 1) {
-      recordInfo.createdByPrimaryGroupName = groupResult[0].name;
-    }
-  }
-
-  const [appGroupResult] = await pool.query(searchGroupQs, [line.application_group]);
-  if (appGroupResult.length === 1) {
-    recordInfo.applicationGroupName = appGroupResult[0].name;
-  }
-
-  const [userResult] = await pool.query(searchUserQs, [line.created_by]);
-  if (userResult.length === 1) {
-    recordInfo.createdByName = userResult[0].name;
-  }
-
-  const [categoryResult] = await pool.query(searchCategoryQs, [line.category_id]);
-  if (categoryResult.length === 1) {
-    recordInfo.categoryName = categoryResult[0].name;
-  }
 
   recordInfo.recordId = line.record_id;
   recordInfo.status = line.status;
   recordInfo.title = line.title;
   recordInfo.detail = line.detail;
   recordInfo.categoryId = line.category_id;
+  recordInfo.categoryName = line.category_name;
   recordInfo.applicationGroup = line.application_group;
+  recordInfo.applicationGroupName = line.group_name;
   recordInfo.createdBy = line.created_by;
+  recordInfo.createdByName = line.user_name;
+  recordInfo.createdByPrimaryGroupName = line.pri_group_name;
   recordInfo.createdAt = line.created_at;
+  recordInfo.updatedAt = line.updated_at;
 
-  const searchItemQs = `select * from record_item_file where linked_record_id = ? order by item_id asc`;
+  const searchItemQs = `
+    with record_file as (
+      select *
+      from record_item_file as rif
+      where linked_record_id = ?
+      order by item_id asc
+    )
+
+    select rf.item_id, f.name as file_name
+    FROM record_file as rf
+    join file as f
+    on rf.linked_file_id = f.file_id`;
   const [itemResult] = await pool.query(searchItemQs, [line.record_id]);
   mylog('itemResult');
   mylog(itemResult);
 
-  const searchFileQs = `select * from file where file_id = ?`;
-  for (let i = 0; i < itemResult.length; i++) {
-    const item = itemResult[i];
-    const [fileResult] = await pool.query(searchFileQs, [item.linked_file_id]);
-
-    let fileName = '';
-    if (fileResult.length !== 0) {
-      fileName = fileResult[0].name;
-    }
-
-    recordInfo.files.push({ itemId: item.item_id, name: fileName });
+  for (const e of itemResult) {
+    recordInfo.files.push({ itemId: e.item_id, name: e.file_name });
   }
 
   await pool.query(
