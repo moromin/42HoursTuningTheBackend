@@ -82,8 +82,8 @@ const postRecords = async (req, res) => {
   // Set default value
   await pool.query(
     `insert into record
-    (record_id, title, detail, category_id, application_group, created_by)
-    values (?, ?, ?, ?, ?, ?)`,
+    (record_id, status, title, detail, category_id, application_group, created_by, created_at, updated_at)
+    values (?, 'open', ?, ?, ?, ?, ?, now(), now())`,
     [
       `${newId}`,
       `${body.title}`,
@@ -102,12 +102,12 @@ const postRecords = async (req, res) => {
     }
     let e = body.fileIdList[i];
     let array = [newId, e.fileId, e.thumbFileId];
-    values += '(\'' + array.join('\', \'') + '\')';
+    values += '(\'' + array.join('\', \'') + '\', now())';
   }
 
   await pool.query(
     `insert into record_item_file
-      (linked_record_id, linked_file_id, linked_thumbnail_file_id)
+      (linked_record_id, linked_file_id, linked_thumbnail_file_id, created_at)
       values ` + values);
 
   res.send({ recordId: newId });
@@ -861,6 +861,7 @@ const getCategories = async (req, res) => {
   for (let i = 0; i < rows.length; i++) {
     items[`${rows[i]['category_id']}`] = { name: rows[i].name };
   }
+
 
   res.send({ items });
 };
