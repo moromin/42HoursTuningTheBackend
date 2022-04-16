@@ -1,1 +1,12 @@
-alter table session add index value_idx (value);
+-- index
+ALTER TABLE session ADD INDEX value_idx (value);
+
+ALTER TABLE group_member ADD INDEX group_idx (group_id);
+ALTER TABLE group_member ADD INDEX user_idx (user_id);
+
+-- default
+ALTER TABLE record MODIFY created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE record MODIFY updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+ALTER TABLE record MODIFY status VARCHAR(16) DEFAULT 'open';
+
+ALTER TABLE record_item_file MODIFY created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;

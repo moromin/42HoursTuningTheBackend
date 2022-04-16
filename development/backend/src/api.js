@@ -79,10 +79,11 @@ const postRecords = async (req, res) => {
 
   const newId = uuidv4();
 
+  // Set default value
   await pool.query(
     `insert into record
-    (record_id, status, title, detail, category_id, application_group, created_by, created_at, updated_at)
-    values (?, "open", ?, ?, ?, ?, ?, now(), now())`,
+    (record_id, title, detail, category_id, application_group, created_by)
+    values (?, ?, ?, ?, ?, ?)`,
     [
       `${newId}`,
       `${body.title}`,
@@ -93,14 +94,21 @@ const postRecords = async (req, res) => {
     ],
   );
 
-  for (const e of body.fileIdList) {
-    await pool.query(
-      `insert into record_item_file
-        (linked_record_id, linked_file_id, linked_thumbnail_file_id, created_at)
-        values (?, ?, ?, now())`,
-      [`${newId}`, `${e.fileId}`, `${e.thumbFileId}`],
-    );
+  // multiple values
+  let values = '';
+  for (let i = 0; i < body.fileIdList.length; i++) {
+    if (i > 0) {
+      values += ', ';
+    }
+    let e = body.fileIdList[i];
+    let array = [newId, e.fileId, e.thumbFileId];
+    values += '(\'' + array.join('\', \'') + '\')';
   }
+
+  await pool.query(
+    `insert into record_item_file
+      (linked_record_id, linked_file_id, linked_thumbnail_file_id)
+      values ` + values);
 
   res.send({ recordId: newId });
 };
