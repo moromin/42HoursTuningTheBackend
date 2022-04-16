@@ -86,12 +86,12 @@ const testAuth = async(method, path) => {
 const httpClient = async (key, method, path, body, forAuthCheck = false) => {
     const url = `${target}${path}`;
 
-    var start = new Date()
-    var hrstart = process.hrtime()
-
     if (!forAuthCheck) {
         await testAuth(method, path);
     }
+
+    var start = new Date()
+    var hrstart = process.hrtime()
 
     const options = {
         url: url,
@@ -116,7 +116,9 @@ const httpClient = async (key, method, path, body, forAuthCheck = false) => {
     var hrend = process.hrtime(hrstart)
 
     // console.info('Execution time: %dms', end)
-    console.info('Execution time (hr): %ds %dms', hrend[0], hrend[1] / 1000000)
+    if (!forAuthCheck) {
+        console.info('Execution time (hr): %ds %dms', hrend[0], hrend[1] / 1000000)
+    }
 
     return r;
 };
