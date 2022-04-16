@@ -30,5 +30,5 @@ services:
       MYSQL_PASSWORD: "backend"
     ports:
       - 3306:3306
-    volumes:
-      - ~/tmp/mysql:/var/log/mysql
+    # volumes:
+    #   - ~/tmp/mysql:/var/log/mysql
