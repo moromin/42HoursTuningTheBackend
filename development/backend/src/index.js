@@ -3,7 +3,6 @@ const app = express();
 
 app.use(express.json({limit: '10mb'}))
 
-
 const api = require("./api");
 
 app.get('/api/hello', (req, res) => {
@@ -129,5 +128,17 @@ app.get('/api/client/records/:recordId/files/:itemId/thumbnail', async (req, res
 })
 
 
-app.listen(8000, () => console.log('listening on port 8000...'))
+// var express = require('express');
+// var numCPUs = require('os').cpus().length;
+
+var cluster = require('cluster');
+var numCPUs = 2;
+
+if (cluster.isMaster) {
+    for (var i = 0; i < numCPUs; i++) {
+        cluster.fork();
+    }
+} else {
+    app.listen(8000, () => console.log('listening on port 8000...'))
+}
 
