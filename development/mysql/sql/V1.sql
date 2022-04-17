@@ -12,8 +12,4 @@ ALTER TABLE record ADD INDEX upd_rec_idx (updated_at DESC, record_id ASC);
 ALTER TABLE record ADD INDEX cre_st_idx (created_by, status);
 
 -- default
---ALTER TABLE record MODIFY created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
---ALTER TABLE record MODIFY updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
---ALTER TABLE record MODIFY status VARCHAR(16) DEFAULT 'open';
 
---ALTER TABLE record_item_file MODIFY created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
